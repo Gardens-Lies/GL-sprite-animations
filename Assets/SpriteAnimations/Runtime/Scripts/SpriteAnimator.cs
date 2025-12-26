@@ -65,8 +65,10 @@ namespace SpriteAnimations
         /// <summary>
         /// The list of animations registered to this animator. 
         /// 
+        /// <br></br>
         /// Important: Changing this at runtime will have no effect on the capacity of the animator
-        /// to play changed list of animations.
+        /// to play changed list of animations, unless you reset the animator.
+        /// <see cref="ResetAnimator(bool)"/>
         /// </summary>
         public List<SpriteAnimation> AnimationsList => _spriteAnimations;
 
@@ -323,6 +325,32 @@ namespace SpriteAnimations
             _stateChanged.Invoke(_state);
             _currentAnimation = null;
             _currentPerformer = null;
+        }
+
+        /// <summary>
+        /// Resets the animator 
+        /// </summary>
+        /// <param name="keepState">
+        /// Keep current animation state.
+        /// Can be dangerous in some cases.
+        /// </param>
+        public void ResetAnimator(bool keepState = false)
+        {
+
+            _currentPerformer?.StopAnimation();
+
+            _animations?.Clear();
+            _performersFactory = null;
+            _loaded = false;
+
+            if (!keepState)
+            {
+                _currentAnimation = null;
+                _currentPerformer = null;
+                _state = AnimatorState.Stopped;
+            }
+
+            LoadAnimator();
         }
 
         /// <summary>
