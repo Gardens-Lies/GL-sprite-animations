@@ -205,8 +205,10 @@ namespace SpriteAnimations
         /// </summary>
         /// <typeparam name="TAnimator">The type of the animator.</typeparam>
         /// <param name="name">The name of the animation to play.</param>
+        /// <param name="preserveFrame">Preserve the current frame played.</param>
         /// <returns>The AnimationPerformer instance for the played animation, or null if the animation is not found.</returns>
-        public TAnimator Play<TAnimator>(string name) where TAnimator : AnimationPerformer
+        public TAnimator Play<TAnimator>(string name,
+            bool preserveFrame = false) where TAnimator : AnimationPerformer
         {
             // Try to get the animation by name
             if (!TryGetAnimationByName(name, out var animation))
@@ -217,7 +219,7 @@ namespace SpriteAnimations
             }
 
             // Play the animation
-            return Play<TAnimator>(animation);
+            return Play<TAnimator>(animation, preserveFrame);
         }
 
         /// <summary>
@@ -225,8 +227,9 @@ namespace SpriteAnimations
         /// animator in order to be found.
         /// </summary>
         /// <param name="name">The name of the animation.</param>
+        /// <param name="preserveFrame">Preserve the current frame played.</param>
         /// <returns>The AnimationPerformer instance for the played animation, or null if the animation is not found.</returns>
-        public AnimationPerformer Play(string name)
+        public AnimationPerformer Play(string name, bool preserveFrame = false)
         {
             // Try to get the animation by its name
             if (!TryGetAnimationByName(name, out var animation))
@@ -237,7 +240,7 @@ namespace SpriteAnimations
             }
 
             // Play the animation
-            return Play(animation);
+            return Play(animation, preserveFrame);
         }
 
         /// <summary>
@@ -245,8 +248,10 @@ namespace SpriteAnimations
         /// </summary>
         /// <typeparam name="TAnimator">The type of the animation performer.</typeparam>
         /// <param name="animation">The animation to play.</param>
+        /// <param name="preserveFrame">Preserve the current frame played.</param>
         /// <returns>The animation performer.</returns>
-        public TAnimator Play<TAnimator>(SpriteAnimation animation) where TAnimator : AnimationPerformer
+        public TAnimator Play<TAnimator>(SpriteAnimation animation,
+            bool preserveFrame = false) where TAnimator : AnimationPerformer
         {
             // If the animation is already playing, return the existing animation performer.
             if (animation == _currentAnimation)
@@ -259,8 +264,13 @@ namespace SpriteAnimations
                 return null;
             }
 
+            // Computes start time
+            float startTime = 0f;
+            if (preserveFrame && _currentPerformer != null)
+                startTime = _currentPerformer.CurrentCycleElapsedTime;
+
             // Change the current animation.
-            ChangeAnimation(animation);
+            ChangeAnimation(animation, startTime);
 
             // Set the sprite animator state to playing.
             _state = AnimatorState.Playing;
@@ -273,9 +283,12 @@ namespace SpriteAnimations
         /// Plays the given sprite animation.
         /// </summary>
         /// <param name="animation">The animation to play.</param>
+        /// <param name="preserveFrame">Preserve the current frame played.</param>
         /// <returns>The animation performer.</returns>
-        public AnimationPerformer Play(SpriteAnimation animation)
+        public AnimationPerformer Play(SpriteAnimation animation,
+            bool preserveFrame = false)
         {
+
             // If the animation is already playing, return the existing animation performer
             if (animation == _currentAnimation)
                 return _performersFactory.Get(animation);
@@ -287,11 +300,16 @@ namespace SpriteAnimations
                 return null;
             }
 
+            // Computes start time
+            float startTime = 0f;
+            if (preserveFrame && _currentPerformer != null)
+                startTime = _currentPerformer.CurrentCycleElapsedTime;
+
             // Change the current animation
-            ChangeAnimation(animation);
-            // Set the state to playing
+            ChangeAnimation(animation, startTime);
+
+            // Set the sprite animator state to playing.
             _state = AnimatorState.Playing;
-            // Return the animation performer for the given animation
             return _performersFactory.Get(animation);
         }
 
@@ -358,13 +376,14 @@ namespace SpriteAnimations
         /// the current animation Stop() method and the new animation Start() method.
         /// </summary>
         /// <param name="animation"></param>
-        protected void ChangeAnimation(SpriteAnimation animation)
+        /// <param name="startTime"></param>
+        protected void ChangeAnimation(SpriteAnimation animation, float startTime = 0f)
         {
             _currentPerformer?.StopAnimation(); // Stop current animation.
 
             _currentPerformer = _performersFactory.Get(animation); // Sets the current handler to the given animation.
             _currentAnimation = animation; // current animation is now the given animation.
-            _currentPerformer.StartAnimation(_currentAnimation); // Starts the given animation.
+            _currentPerformer.StartAnimation(_currentAnimation, startTime); // Starts the given animation.
 
             _animationChanged.Invoke(_currentAnimation); // Fires the animation changed event.
         }

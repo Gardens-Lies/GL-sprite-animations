@@ -29,21 +29,38 @@ namespace SpriteAnimations
         /// <summary>
         /// Must be called to start playing an animation
         /// </summary>
-        public override void StartAnimation(SpriteAnimation animation)
+        public override void StartAnimation(SpriteAnimation animation, float entryTime = 0f)
         {
-            base.StartAnimation(animation);
+
+            base.StartAnimation(animation, entryTime);
 
             _currentAnimation = animation;
             _windroseAnimation = _currentAnimation as SpriteAnimationWindrose;
 
-            ResetCycle();
+            // Instead of ResetCycle(), we apply the entry time.
+            _currentCycleElapsedTime = entryTime;
+            _currentFrame = null;
 
             // Try to get the cycle for the specified direction
             _windroseAnimation.TryGetCycle(_currentDirection, out _currentCycle);
 
             if (_currentCycle.Size > 0)
             {
-                _animator.SpriteRenderer.sprite = _currentCycle.GetFirstFrame().Sprite;
+
+                // Evaluates immediately the correct frame of the present time.
+                // If else, it can draw frame 0 before the next tick.
+                var (_, evaluatedFrame) = _currentCycle.EvaluateIndexAndFrame(_currentCycleElapsedTime);
+
+                if (evaluatedFrame != null)
+                {
+                    _currentFrame = evaluatedFrame;
+                    _animator.SpriteRenderer.sprite = _currentFrame.Sprite;
+                }
+                else
+                {
+                    // Fallback si le temps dépasse la durée ou autre (cas rare)
+                    _animator.SpriteRenderer.sprite = _currentCycle.GetFirstFrame().Sprite;
+                }
             }
 
             _isPlaying = true;

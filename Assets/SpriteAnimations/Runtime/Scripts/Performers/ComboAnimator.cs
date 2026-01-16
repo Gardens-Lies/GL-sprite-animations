@@ -54,9 +54,10 @@ namespace SpriteAnimations
         /// <summary>
         /// Must be called to start playing an animation
         /// </summary>
-        public override void StartAnimation(SpriteAnimation animation)
+        public override void StartAnimation(SpriteAnimation animation, float entryTime = 0f)
         {
-            base.StartAnimation(animation);
+
+            base.StartAnimation(animation, entryTime);
 
             _currentAnimation = animation;
             _comboAnimation = _currentAnimation as SpriteAnimationCombo;

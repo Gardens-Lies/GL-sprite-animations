@@ -38,6 +38,7 @@ namespace SpriteAnimations
         /// <summary>
         /// Used when running an animation
         /// </summary>
+        public float CurrentCycleElapsedTime => _currentCycleElapsedTime;
         protected float _currentCycleElapsedTime = 0.0f;
 
         /// <summary>
@@ -108,10 +109,14 @@ namespace SpriteAnimations
         /// Starts the given sprite animation.
         /// </summary>
         /// <param name="animation">The sprite animation to start.</param>
-        public virtual void StartAnimation(SpriteAnimation animation)
+        /// <param name="entryTime">Time to start the animation at (default 0)</param>
+        public virtual void StartAnimation(SpriteAnimation animation, float entryTime = 0f)
         {
+
             // Set the flipX property of the sprite renderer to false
             _animator.SpriteRenderer.flipX = false;
+
+            _currentCycleElapsedTime = entryTime;
         }
 
         /// <summary>
