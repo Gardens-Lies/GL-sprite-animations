@@ -18,9 +18,16 @@ namespace SpriteAnimations
         protected SpriteAnimationWindrose _windroseAnimation;
 
         /// <summary>
-        /// The current direction in wich the animation is playing.
+        /// The current direction in which the animation is playing.
         /// </summary>
-        protected WindroseDirection _currentDirection = WindroseDirection.South;
+        public Vector2 CurrentRawDirection => _currentRawDirection;
+        protected Vector2 _currentRawDirection = Vector2.down;
+
+        /// <summary>
+        /// The current Windrose direction in which the animation is playing.
+        /// </summary>
+        public WindroseDirection CurrentWindroseDirection => _currentWindroseDirection;
+        protected WindroseDirection _currentWindroseDirection = WindroseDirection.South;
 
         #endregion
 
@@ -42,7 +49,7 @@ namespace SpriteAnimations
             _currentFrame = null;
 
             // Try to get the cycle for the specified direction
-            _windroseAnimation.TryGetCycle(_currentDirection, out _currentCycle);
+            _windroseAnimation.TryGetCycle(_currentWindroseDirection, out _currentCycle);
 
             if (_currentCycle.Size > 0)
             {
@@ -127,7 +134,7 @@ namespace SpriteAnimations
             ResetCycle();
 
             // Try to get the cycle for the specified direction
-            _windroseAnimation.TryGetCycle(_currentDirection, out _currentCycle);
+            _windroseAnimation.TryGetCycle(_currentWindroseDirection, out _currentCycle);
 
             if (_currentCycle.Size > 0)
             {
@@ -202,7 +209,7 @@ namespace SpriteAnimations
             }
 
             // Sets the current direction
-            _currentDirection = direction;
+            _currentWindroseDirection = direction;
 
             if (_currentCycle.Size > 0)
             {
@@ -229,6 +236,9 @@ namespace SpriteAnimations
         /// <returns>The updated <see cref="WindroseAnimator"/> instance.</returns>
         public WindroseAnimator SetDirection(Vector2 movementInput, WindroseFlipStrategy flipStrategy = WindroseFlipStrategy.NoFlip)
         {
+
+            _currentRawDirection = movementInput;
+
             // Sets the current direction
             Vector2Int signedMovementInput = DirectionSign(movementInput);
             WindroseDirection direction = DirectionFromInput(signedMovementInput);
@@ -242,6 +252,9 @@ namespace SpriteAnimations
         /// <returns>The updated <see cref="WindroseAnimator"/> instance.</returns>
         public WindroseAnimator SetDirection(Vector2Int signedMovementInput, WindroseFlipStrategy flipStrategy = WindroseFlipStrategy.NoFlip)
         {
+
+            _currentRawDirection = signedMovementInput;
+
             // Sets the current direction
             WindroseDirection direction = DirectionFromInput(signedMovementInput);
             return SetDirection(direction, flipStrategy);
