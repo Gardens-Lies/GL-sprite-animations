@@ -264,13 +264,8 @@ namespace SpriteAnimations
                 return null;
             }
 
-            // Computes start time
-            float startTime = 0f;
-            if (preserveFrame && _currentPerformer != null)
-                startTime = _currentPerformer.CurrentCycleElapsedTime;
-
             // Change the current animation.
-            ChangeAnimation(animation, startTime);
+            ChangeAnimation(animation, CalculateStartTime(animation, preserveFrame));
 
             // Set the sprite animator state to playing.
             _state = AnimatorState.Playing;
@@ -300,13 +295,8 @@ namespace SpriteAnimations
                 return null;
             }
 
-            // Computes start time
-            float startTime = 0f;
-            if (preserveFrame && _currentPerformer != null)
-                startTime = _currentPerformer.CurrentCycleElapsedTime;
-
             // Change the current animation
-            ChangeAnimation(animation, startTime);
+            ChangeAnimation(animation, CalculateStartTime(animation, preserveFrame));
 
             // Set the sprite animator state to playing.
             _state = AnimatorState.Playing;
@@ -403,6 +393,40 @@ namespace SpriteAnimations
             _animations = new();
             _spriteAnimations.ForEach(a => _animations.Add(a.AnimationName, a));
             _loaded = true;
+        }
+
+        /// <summary>
+        /// Calculate start time of animation based on actual animation completion.
+        /// <br></br>
+        /// Frame preservation have no effect if animation duration is too small
+        /// (at least 2 frames.)
+        /// </summary>
+        /// <param name="newAnimation"></param>
+        /// <param name="preserveFrame">
+        /// True if frame's animation is preserved,
+        /// otherwise false.
+        /// </param>
+        protected float CalculateStartTime(SpriteAnimation newAnimation, bool preserveFrame)
+        {
+
+            // Si on ne veut pas préserver ou qu'il n'y a pas d'animation en cours, on part de 0
+            if (!preserveFrame || _currentPerformer == null || _currentAnimation == null)
+                return 0f;
+
+            // Can't preserve frame if animation has a duration of 0.
+            float currentDuration = _currentAnimation.CalculateDuration();
+            float newDuration = newAnimation.CalculateDuration();
+            if (currentDuration <= 0 || newDuration <= 0)
+                return 0f;
+
+            // Preserving frame require at least 2 frames.
+            if (_currentAnimation.CalculateFramesCount() <= 1)
+                return 0f;
+
+            // Sync frames with modulo.
+            float currentCycleTime = _currentPerformer.CurrentCycleElapsedTime % currentDuration;
+            float normalizedTime = currentCycleTime / currentDuration;
+            return normalizedTime * newDuration;
         }
 
         #endregion
