@@ -129,6 +129,15 @@ namespace SpriteAnimations
         /// </summary>
         public UnityEvent<AnimatorState> StateChanged => _stateChanged;
 
+        /// <summary>
+        /// Gets the current performer cast to a specific type.
+        /// <br></br>
+        /// Useful when references might have changed after a Reset.
+        /// <see cref="ResetAnimator(bool, bool)"/>
+        /// </summary>
+        public T GetCurrentPerformer<T>() where T : AnimationPerformer
+            => _currentPerformer as T;
+        
         #endregion
 
         #region Behaviour
@@ -336,17 +345,51 @@ namespace SpriteAnimations
         }
 
         /// <summary>
-        /// Resets the animator 
+        /// Resets the animator.
+        /// Use with precautions !
         /// </summary>
         /// <param name="keepState">
-        /// Keep current animation state.
-        /// Can be dangerous in some cases.
+        /// Keep the current animation state of performers.
+        /// <br></br>
+        /// If false, animation will not update automatically
+        /// and errors may occurs as well.
+        /// <br></br>
+        /// It'll brock the reference with <see cref="_currentPerformer"/>
+        /// so you better keep the performer with <see cref="GetCurrentPerformer{T}"/>
         /// </param>
-        public void ResetAnimator(bool keepState = false)
+        /// <param name="preserveTime">
+        /// Preserve actual frame of animation.
+        /// </param>
+        public void ResetAnimator(bool keepState = false,
+            bool preserveTime = false)
         {
 
-            _currentPerformer?.StopAnimation();
+            string previousAnimName = null;
+            AnimatorState previousState = _state;
 
+            // Saves additionnal informations for performers.
+            bool isWindrose = false;
+            WindroseDirection savedDirection = WindroseDirection.South;
+            float timeline = 0.0f;
+            if (keepState && _currentAnimation != null && _currentPerformer != null)
+            {
+
+                previousAnimName = _currentAnimation.AnimationName;
+
+                // Here we keep Windrose's direction for later.
+                if (_currentPerformer is WindroseAnimator windrosePerformer)
+                {
+                    isWindrose = true;
+                    savedDirection = windrosePerformer.CurrentWindroseDirection;
+                }
+
+                if (preserveTime)
+                    timeline = _currentAnimation.CalculateDuration();
+            }
+
+            // Cleanup
+
+            _currentPerformer?.StopAnimation();
             _animations?.Clear();
             _performersFactory = null;
             _loaded = false;
@@ -359,6 +402,27 @@ namespace SpriteAnimations
             }
 
             LoadAnimator();
+
+            // Retoration of performers
+            if (keepState && !string.IsNullOrEmpty(previousAnimName))
+            {
+                if (TryGetAnimationByName(previousAnimName, out SpriteAnimation newAnimation))
+                {
+
+                    ChangeAnimation(newAnimation, timeline);
+
+                    // Restores Windrose Animator state.
+                    if (isWindrose && _currentPerformer is WindroseAnimator newWindrosePerformer)
+                        newWindrosePerformer.SetDirection(savedDirection);
+                    
+                    _state = previousState;
+                    if (_state == AnimatorState.Paused)
+                        _stateChanged.Invoke(_state);
+                }
+
+                else
+                    Stop();
+            }
         }
 
         /// <summary>
