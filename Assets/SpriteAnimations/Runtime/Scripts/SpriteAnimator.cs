@@ -437,6 +437,19 @@ namespace SpriteAnimations
         }
 
         /// <summary>
+        /// Replaces actual animations list.
+        /// <br></br>
+        /// <see cref="ResetAnimator(bool, bool)"/> have to be called so
+        /// there are correctly applied.
+        /// </summary>
+        /// <param name="spriteAnimations"></param>
+        public void ReplaceSpriteAnimationsList(List<SpriteAnimation> spriteAnimations)
+        {
+            AnimationsList.Clear();
+            AnimationsList.AddRange(spriteAnimations);
+        }
+
+        /// <summary>
         /// This changes the current animation to be played by the animator. It will call 
         /// the current animation Stop() method and the new animation Start() method.
         /// </summary>
