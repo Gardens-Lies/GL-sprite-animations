@@ -497,7 +497,6 @@ namespace SpriteAnimations
         protected float CalculateStartTime(SpriteAnimation newAnimation, bool preserveFrame)
         {
 
-            // Si on ne veut pas préserver ou qu'il n'y a pas d'animation en cours, on part de 0
             if (!preserveFrame || _currentPerformer == null || _currentAnimation == null)
                 return 0f;
 
