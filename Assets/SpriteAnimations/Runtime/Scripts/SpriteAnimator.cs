@@ -37,6 +37,10 @@ namespace SpriteAnimations
         [SerializeField]
         protected UnityEvent<SpriteAnimation> _animationChanged;
 
+        [Tooltip("The event that will be invoked when the animator resets.")]
+        [SerializeField]
+        protected UnityEvent<AnimationPerformer> _animatorResets; 
+
         [Tooltip("The event that will be invoked when the animator state changes.")]
         [SerializeField]
         protected UnityEvent<AnimatorState> _stateChanged;
@@ -123,6 +127,11 @@ namespace SpriteAnimations
         /// The event that will be invoked when the animation changes.
         /// </summary>
         public UnityEvent<SpriteAnimation> AnimationChanged => _animationChanged;
+
+        /// <summary>
+        /// The event that will be invoked when the animator resets.
+        /// </summary>
+        public UnityEvent<AnimationPerformer> AnimatorResets => _animatorResets;
 
         /// <summary>
         /// The event that will be invoked when the animator state changes.
@@ -423,6 +432,8 @@ namespace SpriteAnimations
                 else
                     Stop();
             }
+
+            _animatorResets.Invoke(_currentPerformer);
         }
 
         /// <summary>
