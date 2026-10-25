@@ -11,6 +11,16 @@ namespace SpriteAnimations
     /// </summary>
     public abstract class AnimationPerformer
     {
+        #region Constants
+
+        /// <summary>
+        /// Small extra time added when skipping to the next frame, so that float
+        /// rounding does not leave the performer just before the target frame.
+        /// </summary>
+        private const float FrameEpsilon = 0.0001f;
+
+        #endregion
+
         #region Fields
 
         /// <summary>
@@ -137,6 +147,24 @@ namespace SpriteAnimations
         }
 
         /// <summary>
+        /// Immediately displays the next frame of the current cycle, without waiting
+        /// for the animator's tick. That frame then lasts a full frame duration.
+        /// </summary>
+        public void PlayNextFrame()
+        {
+            float elapsedTime = _currentCycleElapsedTime;
+            if (!HasCurrentCycle || !TryGetTimeUntilNextFrame(elapsedTime,
+                _currentCycle.CalculateDuration(), _currentCycle.Size, out float remainingTime))
+                return;
+
+            Tick(remainingTime + FrameEpsilon);
+
+            // A cycle end resets the elapsed time without displaying the first frame.
+            if (_currentCycleElapsedTime < elapsedTime)
+                Tick(FrameEpsilon);
+        }
+
+        /// <summary>
         /// Validates if the animation should be played.
         /// </summary>
         /// <returns> true if animation can be played </returns>
@@ -214,8 +242,29 @@ namespace SpriteAnimations
             return Mathf.FloorToInt(elapsedTime * amountOfFrames / duration);
         }
 
+        /// <summary>
+        /// Calculates the time remaining before the next frame of a cycle starts.
+        /// </summary>
+        /// <param name="elapsedTime">The time elapsed in the cycle.</param>
+        /// <param name="cycleDuration">The duration of the whole cycle.</param>
+        /// <param name="amountOfFrames">The number of frames in the cycle.</param>
+        /// <param name="remainingTime">The time before the next frame starts.</param>
+        /// <returns>False if the cycle has no next frame (single frame, or 0 FPS).</returns>
+        public static bool TryGetTimeUntilNextFrame(float elapsedTime, float cycleDuration,
+            int amountOfFrames, out float remainingTime)
+        {
+            remainingTime = 0.0f;
+            if (amountOfFrames <= 1 || !(cycleDuration > 0.0f) || float.IsInfinity(cycleDuration))
+                return false;
+
+            float frameDuration = cycleDuration / amountOfFrames;
+            int frameIndex = Mathf.FloorToInt(elapsedTime / frameDuration);
+            remainingTime = (frameIndex + 1) * frameDuration - elapsedTime;
+
+            return true;
+        }
+
         #endregion
 
     }
-
 }
